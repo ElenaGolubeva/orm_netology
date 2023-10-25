@@ -83,15 +83,18 @@ sale14 = Sale(price=300, date_sale='23.10.2023', id_stock=stock14.id, count=6)
 session.add_all([sale1, sale2, sale3, sale4, sale5, sale6, sale7, sale8, sale9, sale10, sale11, sale12, sale13])
 session.commit()
 
-result = input("Введите автора: ")
+def get_shops(author):
+    query = session.query(Book.name, Shop.name, Sale.price*Sale.count, Sale.date_sale).select_from(Book).join(Stock).join(Shop).join(Publisher).join(Sale)
+    if author.isdigit():
+        query = query.filter(Publisher.id == int(author)).all()
+    else:
+        query = query.filter(Publisher.name.like(f'%{result}%')).all()
+    for book_name, shop_name, price, date_sale in query:
+        print(f"{book_name: <40} | {shop_name: <10} | {price: <8} | {date_sale.strftime('%d-%m-%Y')}")
 
-author = session.query(Publisher).filter(Publisher.name.like(f'%{result}%')).first()
-books = session.query(Book).filter(Book.id_publisher == author.id).all()
 
-for book in books:
-    stock_info = session.query(Stock).join(Book).filter(Book.id == book.id).all()
-    for info in stock_info:
-        sale_info = session.query(Sale).join(Stock).join(Shop).filter(Stock.id == info.id).all()
-        for sale in sale_info:
-            print(f"{book.name.ljust(19)} | {str(sale.date_sale).ljust(10)} | {str(sale.count * sale.price).ljust(8)} | {sale.stock.shop.name.ljust(15)}")
+if __name__ == "__main__":
+    result = input("Введите автора: ")
+    get_shops(result)
+
 session.close()
